@@ -1,0 +1,208 @@
+#!/usr/bin/env python2
+
+from appdirs import AppDirs
+from gmusicapi import Mobileclient
+
+from operator import itemgetter
+from ConfigParser import RawConfigParser
+
+import locale
+import curses
+import time
+import subprocess
+
+from os import path
+
+# get the code we need to write for curses
+locale.setlocale(locale.LC_ALL, '')
+code = locale.getpreferredencoding()
+
+def load_config():
+  # TODO: Check that config file exists - handle lack of it?
+  appdirs = AppDirs("sgmp")
+  config_file_path = path.join(appdirs.user_config_dir, "config.ini")
+  config = RawConfigParser()
+  config.read(config_file_path)
+
+  # TODO: Check that these entries exist in the config file - report issues
+  return {"email": config.get('sgmp', 'email'),
+          "password": config.get('sgmp', 'password'),
+          "mobile-id": config.get('sgmp', 'mobile-id')}
+
+def load_api(email, password, mobile_id):
+  api = Mobileclient()
+  if True == api.login(email, password, mobile_id):
+    return api
+  else:
+    print("Failed to authenticate.")
+    return False
+
+def screen_init():
+  screen = curses.initscr()
+  curses.start_color()
+  curses.use_default_colors()
+  curses.noecho()
+  curses.cbreak()
+  curses.curs_set(0)
+  screen.keypad(1)
+  return screen
+
+def screen_close(screen):
+  curses.nocbreak()
+  screen.keypad(0)
+  curses.echo()
+  curses.endwin()
+
+def show_list(screen, things, start_y, current_item, scrolled):
+  h, w = screen.getmaxyx()
+  line = start_y
+  item = 0
+
+  line = start_y
+  for i in range(max(0, scrolled), min(len(things), h - start_y + scrolled)):
+    flags = 0
+    if i == current_item: flags = curses.A_REVERSE
+    screen.addstr(line, 0, things[i].encode(code), flags)
+
+    line += 1
+
+def main():
+  screen = screen_init()
+  screen.clear()
+  screen.addstr(0, 0, "Logging in...")
+  screen.refresh()
+
+  config = load_config()
+  if not config: return
+
+  api = load_api(config["email"], config["password"], config["mobile-id"])
+  if not api: return
+
+  screen.clear()
+  screen.addstr(0, 0, "Loading your playlists...")
+  screen.refresh()
+
+  NONE = -1
+  PLAYLISTS = 0
+  TRACKS = 1
+  QUEUE = 2
+
+  new_view = PLAYLISTS
+  viewing = NONE
+  view_list = []
+
+  collection = []
+  playlists = []
+  tracks = []
+  queue = []
+
+  try:
+    # TODO: Caching system
+    playlists = api.get_all_user_playlist_contents()
+    playlists = sorted(playlists, key=itemgetter('name'))
+
+    collection = api.get_all_songs()
+
+    screen.timeout(17)
+
+    header_height = 2
+    scroll_y = 0
+    current_item = 0
+
+    while True:
+      h, w = screen.getmaxyx()
+      c = screen.getch()
+
+      # TODO: Render current stuff
+      screen.clear()
+      if new_view != viewing:
+        if new_view == TRACKS:
+          view_list = []
+          for track in tracks:
+            foundTrack = None
+            if 'track' in track:
+              foundTrack = track['track']
+            else:
+              for song in collection:
+                if song['id'] == track['trackId']:
+                  foundTrack = song
+                  break
+            if foundTrack:
+              to_view = "{} - {}".format(foundTrack[u"title"], foundTrack[u"artist"])
+              # screen.clear()
+              # screen.addstr(0, 0, str(foundTrack))
+              # screen.addstr(h-2, 0, foundTrack[u"title"])
+              # screen.addstr(h-1, 0, to_view)
+              # screen.refresh()
+              # time.sleep(9000)
+              view_list.append(to_view)
+
+        if new_view == PLAYLISTS:
+          view_list = []
+          for playlist in playlists:
+            view_list.append(playlist["name"])
+
+      viewing = new_view
+
+      show_list(screen, view_list, header_height, current_item, scroll_y)
+
+      screen.addstr(0, 0, "w,h: {}x{}, ci,sy: {},{}"
+        .format(w, h, current_item, scroll_y))
+
+      if viewing:
+        # viewing = False
+        pass
+
+      if c == -1:
+        # TODO: Check if need to go to next song
+        pass
+
+      elif c == ord('q'):
+        # TODO: Stop playing song if one is playing
+        break
+
+      elif c == ord("k"):
+        if current_item > 0:
+          current_item -= 1
+
+      elif c == ord("j"):
+        if current_item < len(view_list) - 1:
+          current_item += 1
+
+      elif c == ord("\n"):
+        if viewing == PLAYLISTS:
+          new_view = TRACKS
+          tracks = []
+          current_item = 0
+          for track in playlists[current_item]["tracks"]:
+            tracks.append(track)
+
+        if viewing == TRACKS:
+          new_view = QUEUE
+          queue = []
+          for track in tracks:
+            queue.append(track)
+          play(queue[current_item])
+
+      elif c == 0x74: # F5
+        playlists = api.get_all_playlists()
+        playlists = sorted(playlists, key=itemgetter('name'))
+
+      if current_item > h - header_height + scroll_y - 1:
+        scroll_y += 1
+      if current_item < scroll_y:
+        scroll_y -= 1
+
+      screen.refresh()
+
+  finally:
+    # TODO: Stop playing song if one is playing
+    screen_close(screen)
+    if api:
+      api.logout()
+
+  return
+
+if __name__ == "__main__":
+  main()
+
