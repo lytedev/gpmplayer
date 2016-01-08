@@ -20,15 +20,16 @@ code = locale.getpreferredencoding()
 
 def load_config():
   # TODO: Check that config file exists - handle lack of it?
-  appdirs = AppDirs("sgmp")
+  appdirs = AppDirs("gpmplayer")
   config_file_path = path.join(appdirs.user_config_dir, "config.ini")
   config = RawConfigParser()
   config.read(config_file_path)
 
+  # TODO: Allow trying to login without mobile-id if it's not in the config
   # TODO: Check that these entries exist in the config file - report issues
-  return {"email": config.get('sgmp', 'email'),
-          "password": config.get('sgmp', 'password'),
-          "mobile-id": config.get('sgmp', 'mobile-id')}
+  return {"email": config.get('gpmplayer', 'email'),
+          "password": config.get('gpmplayer', 'password'),
+          "mobile-id": config.get('gpmplayer', 'mobile-id')}
 
 def load_api(email, password, mobile_id):
   api = Mobileclient()
