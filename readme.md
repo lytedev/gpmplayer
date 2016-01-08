@@ -47,6 +47,10 @@ Here are the controls:
 
 Fairly self-explanatory, I think.
 
+## Bugs
+
+* Only works in `tmux`? (lol)
+
 ## To Do
 
 * Jump to queue view
