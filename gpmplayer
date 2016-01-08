@@ -155,7 +155,7 @@ def main():
                   foundTrack = song
                   break
             if foundTrack:
-              to_view = "{} - {}".format(foundTrack[u"title"], foundTrack[u"artist"])
+              to_view = u"{} - {}".format(foundTrack[u"title"], foundTrack[u"artist"])
               view_list.append(to_view)
 
         if new_view == PLAYLISTS:

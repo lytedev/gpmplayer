@@ -61,6 +61,10 @@ Fairly self-explanatory, I think.
 * Skipping around in songs
 * Shortcuts for next song, pause, prev song, etc.
 * Non-sucky, configurable interface
+* Async goodness
+* Parallelize where possible
+* Prefetching next few songs
+* Caching requests that generally return a larger payload
 
 ## License
 
