@@ -10,8 +10,9 @@ import locale
 import curses
 import time
 import subprocess
+import random
 
-from os import path
+from os import path, devnull
 
 # get the code we need to write for curses
 locale.setlocale(locale.LC_ALL, '')
@@ -62,9 +63,15 @@ def show_list(screen, things, start_y, current_item, scrolled):
   for i in range(max(0, scrolled), min(len(things), h - start_y + scrolled)):
     flags = 0
     if i == current_item: flags = curses.A_REVERSE
-    screen.addstr(line, 0, things[i].encode(code), flags)
+    screen.addstr(line, 0, things[i].encode(code)[:w], flags)
 
     line += 1
+
+def play(api, song):
+  url = api.get_stream_url(song['trackId'])
+  with open(devnull, 'w') as f:
+    return subprocess.Popen(["mplayer", "-noconfig", "all", "{}".format(url)],
+        stdin=subprocess.PIPE, stdout=f, stderr=f)
 
 def main():
   screen = screen_init()
@@ -82,19 +89,31 @@ def main():
   screen.addstr(0, 0, "Loading your playlists...")
   screen.refresh()
 
+  # duh modes
   NONE = -1
+
+  # view modes
   PLAYLISTS = 0
   TRACKS = 1
   QUEUE = 2
+  NEW_QUEUE = 3
+
+  # repeat modes
+  ALL = 0
+  SINGLE = 1
 
   new_view = PLAYLISTS
   viewing = NONE
   view_list = []
+  player = None
 
   collection = []
   playlists = []
   tracks = []
   queue = []
+
+  repeat = NONE
+  shuffle = False
 
   try:
     # TODO: Caching system
@@ -108,17 +127,25 @@ def main():
     header_height = 2
     scroll_y = 0
     current_item = 0
+    current_song = 0
+    frames = 0
 
     while True:
       h, w = screen.getmaxyx()
       c = screen.getch()
+      frames += 1
 
       # TODO: Render current stuff
       screen.clear()
       if new_view != viewing:
-        if new_view == TRACKS:
+        if new_view == QUEUE or new_view == TRACKS or new_view == NEW_QUEUE:
+          me = queue
+          if new_view == QUEUE or new_view == NEW_QUEUE:
+            new_view = QUEUE
+            me = queue
+          else: me = tracks
           view_list = []
-          for track in tracks:
+          for track in me:
             foundTrack = None
             if 'track' in track:
               foundTrack = track['track']
@@ -129,12 +156,6 @@ def main():
                   break
             if foundTrack:
               to_view = "{} - {}".format(foundTrack[u"title"], foundTrack[u"artist"])
-              # screen.clear()
-              # screen.addstr(0, 0, str(foundTrack))
-              # screen.addstr(h-2, 0, foundTrack[u"title"])
-              # screen.addstr(h-1, 0, to_view)
-              # screen.refresh()
-              # time.sleep(9000)
               view_list.append(to_view)
 
         if new_view == PLAYLISTS:
@@ -146,24 +167,39 @@ def main():
 
       show_list(screen, view_list, header_height, current_item, scroll_y)
 
-      screen.addstr(0, 0, "w,h: {}x{}, ci,sy: {},{}"
-        .format(w, h, current_item, scroll_y))
+      screen.addstr(0, 0, "w,h: {}x{}, ci,sy: {},{}, f: {}, cs: {}, nv,v: {},{}, s: {}"
+        .format(w, h, current_item, scroll_y, frames, current_song, new_view, viewing, shuffle))
 
       if viewing:
         # viewing = False
         pass
 
       if c == -1:
-        # TODO: Check if need to go to next song
-        pass
+        if isinstance(player, subprocess.Popen) and player.poll() != None:
+          current_song = (current_song + 1) % len(queue)
+          player = play(api, queue[current_song])
 
       elif c == ord('q'):
-        # TODO: Stop playing song if one is playing
         break
 
       elif c == ord("k"):
         if current_item > 0:
           current_item -= 1
+
+      elif c == ord("z"):
+        # TODO: Detect if the queue is basically an existing playlist and
+        # unshuffle if shuffle becomes false
+        shuffle = not shuffle
+        if shuffle:
+          if isinstance(player, subprocess.Popen):
+            cs = queue[current_song]
+            random.shuffle(queue)
+            queue.remove(cs)
+            queue.insert(0, cs)
+            new_view = NEW_QUEUE
+
+      elif c == ord("p"):
+        new_view = PLAYLISTS
 
       elif c == ord("j"):
         if current_item < len(view_list) - 1:
@@ -173,16 +209,25 @@ def main():
         if viewing == PLAYLISTS:
           new_view = TRACKS
           tracks = []
-          current_item = 0
           for track in playlists[current_item]["tracks"]:
             tracks.append(track)
+          current_item = 0
 
         if viewing == TRACKS:
           new_view = QUEUE
           queue = []
           for track in tracks:
             queue.append(track)
-          play(queue[current_item])
+          if isinstance(player, subprocess.Popen):
+            player.terminate()
+          player = play(api, queue[current_item])
+          current_song = current_item
+
+        if viewing == QUEUE:
+          if isinstance(player, subprocess.Popen):
+            player.terminate()
+          player = play(api, queue[current_item])
+          current_song = current_item
 
       elif c == 0x74: # F5
         playlists = api.get_all_playlists()
@@ -196,10 +241,11 @@ def main():
       screen.refresh()
 
   finally:
-    # TODO: Stop playing song if one is playing
-    screen_close(screen)
+    if isinstance(player, subprocess.Popen):
+      player.terminate()
     if api:
       api.logout()
+    screen_close(screen)
 
   return
 

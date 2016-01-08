@@ -11,6 +11,9 @@ own tool is half the fun, right?
 `gpmplayer` depends on the wonderful [gmusicapi][gmusicapi]. It also uses
 appdirs for figuring out where to put its files.
 
+It also uses `mplayer` to actually, y'know, *play* the songs. So you'll need
+that installed (and obviously in your PATH) as well.
+
 ```bash
 sudo pip2 install gmusicapi appdirs
 ```
