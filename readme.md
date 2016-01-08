@@ -49,7 +49,7 @@ Fairly self-explanatory, I think.
 
 ## Bugs
 
-* Only works in `tmux`? (lol)
+* None at this moment...? Lots of missing functionality...
 
 ## To Do
 
