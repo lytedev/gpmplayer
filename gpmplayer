@@ -76,7 +76,7 @@ def play(api, song):
 
 def main():
   screen = screen_init()
-  screen.clear()
+  screen.redrawln(0, 1)
   screen.addstr(0, 0, "Logging in...")
   screen.refresh()
 
@@ -86,7 +86,7 @@ def main():
   api = load_api(config["email"], config["password"], config["mobile-id"])
   if not api: return
 
-  screen.clear()
+  screen.redrawln(0, 1)
   screen.addstr(0, 0, "Loading your playlists...")
   screen.refresh()
 
@@ -136,8 +136,7 @@ def main():
       c = screen.getch()
       frames += 1
 
-      # TODO: Render current stuff
-      screen.clear()
+      screen.redrawln(0, h - 1)
       if new_view != viewing:
         if new_view == QUEUE or new_view == TRACKS or new_view == NEW_QUEUE:
           me = queue
@@ -166,6 +165,7 @@ def main():
 
       viewing = new_view
 
+      screen.erase()
       show_list(screen, view_list, header_height, current_item, scroll_y)
 
       screen.addstr(0, 0, "w,h: {}x{}, ci,sy: {},{}, f: {}, cs: {}, nv,v: {},{}, s: {}"
