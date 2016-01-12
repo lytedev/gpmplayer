@@ -47,6 +47,14 @@ Here are the controls:
 
 Fairly self-explanatory, I think.
 
+## Install
+
+    sudo ln -s "$PWD/gpmplayer" /usr/bin/gpmplayer
+
+## Uninstall
+
+    sudo rm -f /usr/bin/gpmplayer
+
 ## Bugs
 
 * None at this moment...? Lots of missing functionality...
