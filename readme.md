@@ -2,9 +2,17 @@
 
 A simple curses client for Google Play Music.
 
+![Queue mode screenshot][ss1]
+
 I started this project because [thunner][thunner] didn't support Two-Factor
 Authentication... or at least I couldn't figure it out. Anyways, writing your
 own tool is half the fun, right?
+
+## Disclaimer
+
+This project isn't really all that great to use. So far, it has the absolutely
+minimum amount of functionality/usability that I needed and I've basically
+stopped there. Please don't expect a full-featured client at this point!
 
 ## Dependencies
 
@@ -79,6 +87,7 @@ Fairly self-explanatory, I think.
 You can find it [here][license].
 
 
+[ss1]: https://github.com/lytedev/gpmplayer/blob/pr-assets/screenshots/1.png?raw=true
 [thunner]: https://github.com/malcolmstill/thunner
 [gmusicapi]: https://github.com/simon-weber/gmusicapi
 [license]: https://github.com/lytedev/gpmplayer/blob/master/LICENSE
