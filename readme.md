@@ -70,12 +70,14 @@ Fairly self-explanatory, I think.
 ## To Do
 
 * Jump to queue view
+* Shortcuts (and functionality) for next song, pause, prev song, etc.
+* In-playlist/in-queue fuzzy search
+* Some way to pipe status out (for displaying on bar)
+* Google Play Search/radio functionality
 * Moar configuration options
 * Better queue management
-* Search/radio functionality
 * Show song progress
 * Skipping around in songs
-* Shortcuts for next song, pause, prev song, etc.
 * Non-sucky, configurable interface
 * Async goodness
 * Parallelize where possible
