@@ -4,9 +4,9 @@ A simple curses client for Google Play Music.
 
 ![Queue mode screenshot][ss1]
 
-I started this project because [thunner][thunner] didn't support Two-Factor
-Authentication... or at least I couldn't figure it out. Anyways, writing your
-own tool is half the fun, right?
+I started this project because [thunner][thunner] didn't support Google
+accounts using Two-Factor Authentication... or at least I couldn't figure it
+out. Anyways, writing your own tool is half the fun, right?
 
 ## Disclaimer
 
@@ -23,7 +23,7 @@ It also uses `mplayer` to actually, y'know, *play* the songs. So you'll need
 that installed (and obviously in your PATH) as well.
 
 ```bash
-sudo pip2 install gmusicapi appdirs
+sudo pipinstall gmusicapi appdirs
 ```
 
 ## Config
