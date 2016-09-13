@@ -28,7 +28,7 @@ def load_config():
 
     try:
         email = config.get('gpmplayer', 'email')
-        password = config.get('gpmplayer', 'password'),
+        password = config.get('gpmplayer', 'password')
         mobile_id = config.get('gpmplayer', 'mobile-id', fallback="")
 
         return { "email": email,
@@ -46,7 +46,6 @@ def load_api(email, password, mobile_id=""):
     api = Mobileclient()
     if mobile_id == "":
         mobile_id = Mobileclient.FROM_MAC_ADDRESS
-    print("Email: {}\nPassword: {}\nMobile ID: {}".format(email, password, mobile_id))
     if api.login(email, password, mobile_id) == True:
         return api
     else:
